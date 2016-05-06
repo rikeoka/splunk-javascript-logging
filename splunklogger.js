@@ -463,9 +463,14 @@ SplunkLogger.prototype._sendEvents = function(context, callback) {
                 _body = body;
 
                 // Try to parse an error response from Splunk Enterprise or Splunk Cloud
-                if (!requestError && body && body.code.toString() !== "0") {
+                if (!requestError && body && body.code && body.code.toString() !== "0") {
                     splunkError = new Error(body.text);
                     splunkError.code = body.code;
+                }
+                else if (!requestError && body) {
+                    // Likely encountered a non-JSON response
+                    splunkError = new Error("Unexpected response from Splunk. Request body was: " + body);
+                    splunkError.code = -1;
                 }
 
                 // Retry if no Splunk error, a non-200 request response, and numRetries hasn't exceeded the limit
